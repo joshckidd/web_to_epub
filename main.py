@@ -1,10 +1,12 @@
+import settings
 import requests
 from bs4 import BeautifulSoup
 # Use this for doc reference: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
 def main():
-    URL = "http://strangehorizons.com/wordpress/poetry/watching-migrations/"
-    page = requests.get(URL)
+    settings_dict = settings.get_settings()
+    url = settings_dict["sources"]["link"]
+    page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
     results = soup.find(class_="post")
     category = results.find(rel="category").contents[0]
