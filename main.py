@@ -10,10 +10,12 @@ def main():
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
     values = get_values(soup, settings_dict["values"])
-    values["content"].script.decompose()
+    # the line below doesn't work now because we're getting a regular string
+    #values["content"].script.decompose()
     print(values["category"])
     print(values["author"])
     print(values["content"])
+    print(values["title"])
 
 if __name__ == "__main__":
     main()
