@@ -1,7 +1,14 @@
-def get_values(soup, values_settings):
+from bs4 import BeautifulSoup
+# Use this for doc reference: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
+
+def get_values(content, values_settings):
     values = {}
+    soup = BeautifulSoup(content, "html.parser")
     for value in values_settings:
-        values[value] = parse_soup(soup, values_settings[value])
+        new_value = parse_soup(soup, values_settings[value]["find"])
+        if "remove" in values_settings[value]:
+            new_value = remove_tags(new_value, values_settings[value]["remove"])
+        values[value] = new_value
     return values
 
 def parse_soup(soup, value_rule):
@@ -19,3 +26,17 @@ def parse_soup(soup, value_rule):
     if len(value_rule_split) == 1:
         return str(new_soup)
     return parse_soup(new_soup, value_rule_split[1])
+
+def remove_tags(content, tag_list):
+    soup = BeautifulSoup(content, "html.parser")
+    for tag in tag_list:
+        find_args = tag.split(".")
+        if len(find_args) == 1:
+            remove = soup.find(find_args[0])
+        else:
+            kwargs = {find_args[0]: find_args[1]}
+            remove = soup.find(**kwargs)
+        if remove != None:
+            remove.decompose()
+    return str(soup)
+
