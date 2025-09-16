@@ -1,17 +1,18 @@
-import settings
-import requests
-from parse import get_values
+from settings import get_settings
+from parse import get_values, get_links
 
 
 def main():
-    settings_dict = settings.get_settings()
-    url = settings_dict["sources"]["link"]
-    page = requests.get(url)
-    values = get_values(page.content, settings_dict["values"])
-    print(values["category"])
-    print(values["author"])
-    print(values["content"])
-    print(values["title"])
+    settings_dict = get_settings()
+    # update for parsing links out of a page
+    links = get_links(settings_dict["sources"])
+    for url in links:
+        values = get_values(url, settings_dict["values"])
+        # update for possibilities like multiple categories
+        print(values["category"])
+        print(values["author"])
+        print(values["content"])
+        print(values["title"])
 
 if __name__ == "__main__":
     main()
