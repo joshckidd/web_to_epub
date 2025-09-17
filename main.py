@@ -1,6 +1,7 @@
 from settings import get_settings
 from parse import get_values, get_links
 
+# add tests
 
 def main():
     settings_dict = get_settings()
@@ -8,7 +9,6 @@ def main():
     links = get_links(settings_dict["sources"])
     for url in links:
         values = get_values(url, settings_dict["values"])
-        # update for possibilities like multiple categories
         print(values["category"])
         print(values["author"])
         print(values["content"])
