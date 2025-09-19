@@ -1,0 +1,6 @@
+sources:
+  links:
+    - https://www.example.com/
+values:
+  title: 
+    find: div#title

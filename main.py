@@ -1,5 +1,5 @@
-from settings import get_settings
-from parse import get_values, get_links
+from src.settings import get_settings
+from src.parse import get_values, get_links
 
 # add tests
 
