@@ -1,7 +1,7 @@
 from src.settings import get_settings
 from src.parse import get_values, get_links
 
-# add tests
+# download images
 
 def main():
     settings_dict = get_settings()

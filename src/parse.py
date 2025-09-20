@@ -1,4 +1,5 @@
 import requests
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 # Use this for doc reference: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
@@ -21,7 +22,9 @@ def get_links(sources):
         for link_page in sources["link-pages"]:
             page = requests.get(link_page["url"])
             soup = BeautifulSoup(page.content, "html.parser")
-            links += parse_soup(soup, link_page["pattern"])
+            new_links = parse_soup(soup, link_page["find"])
+            absolute_links = list(map(lambda x: urljoin(link_page["url"], x), new_links))
+            links += absolute_links
     return links
 
 def parse_soup(soup, value_rule):

@@ -1,6 +1,7 @@
 sources:
-  links:
-    - https://www.example.com/
+  link-pages:
+    - url: https://joshckidd.github.io/static_site/
+      find: ul li a attr=href
 values:
   title: 
-    find: div#title
+    find: h1 text
