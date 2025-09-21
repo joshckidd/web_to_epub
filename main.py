@@ -1,7 +1,8 @@
 from src.settings import get_settings
 from src.parse import get_values, get_links
 
-# download images
+# start creating an ebook!
+# image download test
 
 def main():
     settings_dict = get_settings()

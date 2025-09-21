@@ -9,5 +9,10 @@ wheels/
 # Virtual environments
 .venv
 
-# Individual templates should be private data
-template/
+# The template is private
+template/*
+!template/README.md
+
+# Generated files
+output/*
+!output/README.md

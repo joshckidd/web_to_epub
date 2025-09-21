@@ -1,0 +1,1 @@
+Output from the script will be placed in this folder.

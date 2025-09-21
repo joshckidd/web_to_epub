@@ -1,5 +1,7 @@
 import requests
-from urllib.parse import urljoin
+import os
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 # Use this for doc reference: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
@@ -11,6 +13,8 @@ def get_values(url, values_settings):
         new_values = parse_soup(soup, values_settings[value]["find"])
         if "remove" in values_settings[value]:
             new_values = list(map(lambda x: remove_tags(x, values_settings[value]["remove"]), new_values))
+        if "images" in values_settings[value]:
+            new_values = list(map(lambda x: get_images(x, values_settings[value]["images"]), new_values))
         values[value] = new_values
     return values
 
@@ -27,21 +31,36 @@ def get_links(sources):
             links += absolute_links
     return links
 
-def parse_soup(soup, value_rule):
+def get_images(content, folder):
+    if folder == None:
+        folder = ""
+    soup = BeautifulSoup(content, "html.parser")
+    images = soup.find_all("img")
+    for image in images:
+        source = image["src"]
+        name = os.path.basename(urlparse(source).path)
+        page = requests.get(source)
+        Path("output/" + folder).mkdir(parents=True, exist_ok=True)
+        with open("output/" + folder + name, "wb") as f:
+            f.write(page.content)
+        image["src"] = "static/" + name
+    return str(soup)
+
+def parse_soup(soup, find):
     # the rule can be a series of searches separated by a space
     # each section of the rule can be in the form <tag>.<attribute>
-    value_rule_split = value_rule.split(" ", 1)
-    results = find_by_rule(soup, value_rule_split[0])
-    if len(value_rule_split) == 1:
+    find_split = find.split(" ", 1)
+    results = find_by_rule(soup, find_split[0])
+    if len(find_split) == 1:
         return list(map(lambda x: str(x), results))
-    elif value_rule_split[1] == "text":
+    elif find_split[1] == "text":
         return list(map(lambda x: x.get_text(), results))
-    elif value_rule_split[1][0:5] == "attr=":
-        split_attr = value_rule_split[1].split("=")
+    elif find_split[1][0:5] == "attr=":
+        split_attr = find_split[1].split("=")
         return list(map(lambda x: x.attrs[split_attr[1]], results))
     new_results = []
     for result in results:
-        new_results += parse_soup(result, value_rule_split[1])
+        new_results += parse_soup(result, find_split[1])
     return new_results
 
 def remove_tags(content, tag_list):
