@@ -1,5 +1,4 @@
 import yaml
-# Use this for doc reference: https://pyyaml.org/wiki/PyYAMLDocumentation
 
 def get_settings(testing=False):
     if testing:
