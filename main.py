@@ -1,41 +1,36 @@
 from src.settings import get_settings
-from src.parse import get_values, get_links
+from src.parse import get_values, get_links, get_ebook_values
 from ebooklib import epub
 # Use this for doc reference: https://pypi.org/project/EbookLib/
 
 # image download test
+# static and aggregate test
 
 def main():
     settings_dict = get_settings()
     links = get_links(settings_dict["sources"])
     url = links[0]
     values = get_values(url, settings_dict["values"])
+    values_list = [values]
     print(values["category"])
-    print(values["author"])
+    print(values["authors"])
     print(values["content"])
     print(values["title"])
 
+    ebook_values = get_ebook_values(values_list, settings_dict["ebook-values"])
+
     # pasted from ebooklib documentation
-    # next step: Write a function to create the ebook and set the metadata based on settings in 
-    # the yaml file. I also want to create "aggregate values" at the ebook and chapter level. So
-    # I'll also want to collect the values for each chapter in a list for making ebook level
-    # aggregate values. And I'll want to update all values to be either: static, find, or 
-    # aggregate.
+    # next step: Create a chapter with images!
 
     book = epub.EpubBook()
 
     # set metadata
-    book.set_identifier("id123456")
-    book.set_title("Sample book")
-    book.set_language("en")
+    book.set_identifier(ebook_values["id"][0])
+    book.set_title(ebook_values["title"][0])
+    book.set_language(ebook_values["language"][0])
 
-    book.add_author("Author Authorowski")
-    book.add_author(
-        "Danko Bananko",
-        file_as="Gospodin Danko Bananko",
-        role="ill",
-        uid="coauthor",
-    )
+    for author in ebook_values["authors"]:
+        book.add_author(author)
 
     # create chapter
     c1 = epub.EpubHtml(title=values["title"][0], file_name="chap_01.xhtml", lang="hr")

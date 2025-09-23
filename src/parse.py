@@ -10,13 +10,37 @@ def get_values(url, values_settings):
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
     for value in values_settings:
-        new_values = parse_soup(soup, values_settings[value]["find"])
+        new_values = []
+        if "static" in values_settings[value]:
+            new_values.append(values_settings[value]["static"])
+        if "find" in values_settings[value]:
+            new_values += parse_soup(soup, values_settings[value]["find"])
         if "remove" in values_settings[value]:
             new_values = list(map(lambda x: remove_tags(x, values_settings[value]["remove"]), new_values))
         if "images" in values_settings[value]:
             new_values = list(map(lambda x: get_images(x, values_settings[value]["images"]), new_values))
         values[value] = new_values
+    for value in values:
+        if "aggregate" in values_settings[value]:
+            setting_split = values_settings[value]["aggregate"].split(" ", 1)
+            if setting_split[0] in values:
+                values[value] += get_aggregate(setting_split[1], values[setting_split[0]])
     return values
+
+def get_ebook_values(values_list, values_settings):
+    ebook_values = {}
+    for value in values_settings:
+        new_values = []
+        if "static" in values_settings[value]:
+            new_values.append(values_settings[value]["static"])
+        if "aggregate" in values_settings[value]:
+            setting_split = values_settings[value]["aggregate"].split(" ", 1)
+            values = get_all_values(values_list, setting_split[0])
+            if values != None:
+                new_values += get_aggregate(setting_split[1], values)
+        ebook_values[value] = new_values
+    return ebook_values
+
 
 def get_links(sources):
     links = []
@@ -45,6 +69,23 @@ def get_images(content, folder):
             f.write(page.content)
         image["src"] = "static/" + name
     return str(soup)
+
+def get_aggregate(rule, values):
+    rule_split = rule.split(" ", 1)
+    if rule_split[0] == "join":
+        if rule_split[1][0] == '"' and rule_split[1][-1] == '"':
+            joiner = rule_split[1][1:-1]
+        else:
+            joiner = rule_split[1]
+        return [joiner.join(values)]
+    if rule_split[0] == "list":
+        return values
+    
+def get_all_values(values_list, value):
+    all_values = []
+    for values in values_list:
+        all_values += values[value]
+    return all_values
 
 def parse_soup(soup, find):
     # the rule can be a series of searches separated by a space
