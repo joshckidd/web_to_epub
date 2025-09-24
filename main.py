@@ -5,6 +5,7 @@ from ebooklib import epub
 
 # image download test
 # static and aggregate test
+# epub metadata test
 
 def main():
     settings_dict = get_settings()
@@ -14,13 +15,12 @@ def main():
     values_list = [values]
     print(values["category"])
     print(values["authors"])
-    print(values["content"])
     print(values["title"])
 
     ebook_values = get_ebook_values(values_list, settings_dict["ebook-values"])
 
     # pasted from ebooklib documentation
-    # next step: Create a chapter with images!
+    # next step: start breaking this out into functions
 
     book = epub.EpubBook()
 
@@ -33,19 +33,17 @@ def main():
         book.add_author(author)
 
     # create chapter
-    c1 = epub.EpubHtml(title=values["title"][0], file_name="chap_01.xhtml", lang="hr")
+    c1 = epub.EpubHtml(title=values["title"][0], file_name=values["title"][0] + ".xhtml", lang=ebook_values["language"][0])
     c1.content = (
-        "<h1>Intro heading</h1>"
-        "<p>Zaba je skocila u baru.</p>"
-        '<p><img alt="[ebook logo]" src="static/ebooklib.gif"/><br/></p>'
+        "<h1>" + values["title"][0] + "</h1>" + "<h2>by " + values["authors"][0] + "</h2>" + values["content"][0]
     )
 
     # create image from the local image
     image_content = open("output/orphanplanetcover.jpg", "rb").read()
     img = epub.EpubImage(
         uid="image_1",
-        file_name="static/ebooklib.gif",
-        media_type="image/gif",
+        file_name="static/orphanplanetcover.jpg",
+        media_type="image/jpg",
         content=image_content,
     )
 
