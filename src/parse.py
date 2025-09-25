@@ -27,6 +27,12 @@ def get_values(url, values_settings):
                 values[value] += get_aggregate(setting_split[1], values[setting_split[0]])
     return values
 
+def get_values_list(links, values_settings):
+    values_list = []
+    for link in links:
+        values_list.append(get_values(link, values_settings))
+    return values_list
+
 def get_ebook_values(values_list, values_settings):
     ebook_values = {}
     for value in values_settings:
