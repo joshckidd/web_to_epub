@@ -1,21 +1,20 @@
 from src.settings import get_settings
 from src.parse import get_values_list, get_links, get_ebook_values
-from src.format import WebBook
-from ebooklib import epub
-# Use this for doc reference: https://pypi.org/project/EbookLib/
+from src.web_book import WebBook
 
+# next steps: 
+# make it so you only pass the settings to WebBook
+# add toc
+# check on image folder settings
 # image download test
 # static and aggregate test
 # epub metadata test
+# epub chapter tests
+
 
 def main():
     settings_dict = get_settings()
-    links = get_links(settings_dict["sources"])
-    values_list = get_values_list(links, settings_dict["values"])
-
-    # next step: add toc
-    # check on image folder settings
-
+    values_list = get_values_list(get_links(settings_dict["sources"]), settings_dict["values"])
     book = WebBook(get_ebook_values(values_list, settings_dict["ebook-values"]))
     book.create_chapters(values_list)
     book.write_book()
