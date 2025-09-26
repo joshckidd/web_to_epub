@@ -5,7 +5,7 @@ from ebooklib import epub
 
 class WebBook:
 
-    def __init__(self, ebook_values):
+    def __init__(self, ebook_values, template_files):
         self.image_folder = None
         self.book = epub.EpubBook()
         self.book.spine = ["nav"]
@@ -25,19 +25,25 @@ class WebBook:
         for author in ebook_values["authors"]:
             self.book.add_author(author)
 
+        with open("template/" + template_files["chapter"], "r") as f:
+            self.chapter_template = f.read()
+        with open("template/" + template_files["css"], "r") as f:
+            self.css_template = f.read()
+
     def create_chapters(self, values_list):
         for values in values_list:
             c1 = epub.EpubHtml(title=values["title"][0], file_name=values["title"][0] + ".xhtml", lang=self.default_language)
-            c1.content = (
-                "<h1>" + values["title"][0] + "</h1>" + "<h2>by " + values["authors"][0] + "</h2>" + values["content"][0]
-            )
+            c1.content = self.chapter_template.replace("{{title}}", values["title"][0])
+            c1.content = c1.content.replace("{{authors}}", values["authors"][0])
+            c1.content = c1.content.replace("{{content}}", values["content"][0])
             self.book.add_item(c1)
             self.book.spine.append(c1)
         if self.image_folder != None:
             images = os.listdir(self.image_folder)
             for image in images:
                 mime_type, encoding = mimetypes.guess_type(self.image_folder + image)
-                image_content = open(self.image_folder + image, "rb").read()
+                with open(self.image_folder + image, "rb") as f:
+                    image_content = f.read()
                 img = epub.EpubImage(
                     uid="image_" + image,
                     file_name="static/" + image,
@@ -58,12 +64,11 @@ class WebBook:
         self.book.add_item(epub.EpubNav())
 
         # define CSS style
-        style = "BODY {color: white;}"
         nav_css = epub.EpubItem(
             uid="style_nav",
             file_name="style/nav.css",
             media_type="text/css",
-            content=style,
+            content=self.css_template,
         )
 
         # add CSS file
