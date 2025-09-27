@@ -5,3 +5,15 @@ sources:
 values:
   title: 
     find: h1 text
+  content:
+    find: article div
+ebook-values:
+  id: 
+    static: uri:https://joshckidd.github.io/static_site/
+  title:
+    static: WebBook Test
+  language:
+    static: en
+template-files:
+  chapter: template.html
+  css: template.css
