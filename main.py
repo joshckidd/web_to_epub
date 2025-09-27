@@ -2,13 +2,12 @@ import os
 from src.settings import get_settings, TEMPLATE_DIR
 from src.web_book import WebBook
 
-# next steps:
+# tasks to finish:
 # add toc 
 # add sections 
-# add static pages 
+# add pages 
 # add cover
 # add documentation
-
 
 def main():
     template_files = os.listdir(TEMPLATE_DIR)

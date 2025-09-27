@@ -18,13 +18,8 @@ class WebBook(epub.EpubBook):
         self.__set_ebook_values()
         self.__set_metadata()
         self.__set_templates()
+        self.toc = []
         self.__create_chapters()
-
-        # define Table Of Contents
-        self.toc = (
-            epub.Link("chap_01.xhtml", "Introduction", "intro"),
-            #(epub.Section("Simple book"), (c1,)),
-        )
 
         # add default NCX and Nav file
         self.add_item(epub.EpubNcx())
@@ -103,6 +98,7 @@ class WebBook(epub.EpubBook):
             c1.content = self.__merge_content(self.chapter_template, values)
             self.add_item(c1)
             self.spine.append(c1)
+            self.toc.append(c1)
 
     def __get_values(self, url):
         values = {}
