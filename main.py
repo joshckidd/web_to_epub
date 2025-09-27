@@ -1,8 +1,8 @@
+import os
 from src.settings import get_settings
 from src.web_book import WebBook
 
-# next steps: 
-# search for all merge fields in a template
+# next steps:
 # add toc 
 # image test
 # static and aggregate test
@@ -11,9 +11,12 @@ from src.web_book import WebBook
 
 
 def main():
-    settings_dict = get_settings()
-    book = WebBook(settings_dict)
-    book.write_book()
+    template_files = os.listdir("template/")
+    for file in template_files:
+        if file[-4:] == ".yml":
+            settings_dict = get_settings(file)
+            book = WebBook(settings_dict)
+            book.write_book()
 
 if __name__ == "__main__":
     main()

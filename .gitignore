@@ -12,6 +12,7 @@ wheels/
 # The template is private
 template/*
 !template/README.md
+!template/template_test.*
 
 # Generated files
 output/*

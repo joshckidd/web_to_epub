@@ -1,6 +1,7 @@
 import os
 import mimetypes
 import requests
+import re
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from ebooklib import epub
@@ -24,9 +25,9 @@ class WebBook(epub.EpubBook):
         if "language" in self.ebook_values:
             self.set_language(self.ebook_values["language"][0])
             self.default_language = self.ebook_values["language"][0]
-            
-        for author in self.ebook_values["authors"]:
-            self.add_author(author)
+        if "authors" in self.ebook_values:
+            for author in self.ebook_values["authors"]:
+                self.add_author(author)
 
         with open("template/" + self.template_files["chapter"], "r") as f:
             self.chapter_template = f.read()
@@ -56,18 +57,25 @@ class WebBook(epub.EpubBook):
         # add CSS file
         self.add_item(nav_css)
 
+    def write_book(self):
+        # write to the file
+        if "file-name" in self.ebook_values:
+            epub.write_epub("output/" + self.ebook_values["file-name"][0], self, {})
+
     def __create_chapters(self):
         for values in self.values_list:
             c1 = epub.EpubHtml(title=values["title"][0], file_name=values["title"][0] + ".xhtml", lang=self.default_language)
-            c1.content = self.chapter_template.replace("{{title}}", values["title"][0])
-            c1.content = c1.content.replace("{{authors}}", values["authors"][0])
-            c1.content = c1.content.replace("{{content}}", values["content"][0])
+            c1.content = self.__merge_content(self.chapter_template, values)
             self.add_item(c1)
             self.spine.append(c1)
 
-    def write_book(self):
-        # write to the file
-        epub.write_epub("output/test.epub", self, {})
+    def __merge_content(self, template, values):
+        content = template
+        merge_fields = re.findall("{{(.*)}}", template)
+        for merge_field in merge_fields:
+            if merge_field in values:
+                content = content.replace("{{" + merge_field + "}}", values[merge_field][0])
+        return content
 
     def __get_ebook_values(self):
         self.ebook_values = {}

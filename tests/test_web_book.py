@@ -5,8 +5,8 @@ import src.web_book
 class TestWebBook(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
-        super(unittest.TestCase, self).__init__()
-        settings_dict = src.settings.get_settings(testing=True)
+        super(TestWebBook, self).__init__(*args, **kwargs)
+        settings_dict = src.settings.get_settings("template_test.yml")
         self.book = src.web_book.WebBook(settings_dict)
 
     def test_get_links(self):
