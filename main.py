@@ -1,17 +1,17 @@
 import os
-from src.settings import get_settings
+from src.settings import get_settings, TEMPLATE_DIR
 from src.web_book import WebBook
 
 # next steps:
 # add toc 
-# image test
-# static and aggregate test
-# epub metadata test
-# epub chapter tests
+# add sections 
+# add static pages 
+# add cover
+# add documentation
 
 
 def main():
-    template_files = os.listdir("template/")
+    template_files = os.listdir(TEMPLATE_DIR)
     for file in template_files:
         if file[-4:] == ".yml":
             settings_dict = get_settings(file)

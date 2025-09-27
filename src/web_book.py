@@ -13,27 +13,11 @@ class WebBook(epub.EpubBook):
         super().__init__()
         self.spine = ["nav"]
         self.settings_dict = settings_dict
-        self.__get_links()
-        self.__get_values_list()
-        self.__get_ebook_values()
-        self.template_files = self.settings_dict['template-files']
-
-        if "id" in self.ebook_values:
-            self.set_identifier(self.ebook_values["id"][0])
-        if "title" in self.ebook_values:
-            self.set_title(self.ebook_values["title"][0])
-        if "language" in self.ebook_values:
-            self.set_language(self.ebook_values["language"][0])
-            self.default_language = self.ebook_values["language"][0]
-        if "authors" in self.ebook_values:
-            for author in self.ebook_values["authors"]:
-                self.add_author(author)
-
-        with open("template/" + self.template_files["chapter"], "r") as f:
-            self.chapter_template = f.read()
-        with open("template/" + self.template_files["css"], "r") as f:
-            self.css_template = f.read()
-
+        self.__set_links()
+        self.__set_values_list()
+        self.__set_ebook_values()
+        self.__set_metadata()
+        self.__set_templates()
         self.__create_chapters()
 
         # define Table Of Contents
@@ -62,22 +46,7 @@ class WebBook(epub.EpubBook):
         if "file-name" in self.ebook_values:
             epub.write_epub("output/" + self.ebook_values["file-name"][0], self, {})
 
-    def __create_chapters(self):
-        for values in self.values_list:
-            c1 = epub.EpubHtml(title=values["title"][0], file_name=values["title"][0] + ".xhtml", lang=self.default_language)
-            c1.content = self.__merge_content(self.chapter_template, values)
-            self.add_item(c1)
-            self.spine.append(c1)
-
-    def __merge_content(self, template, values):
-        content = template
-        merge_fields = re.findall("{{(.*)}}", template)
-        for merge_field in merge_fields:
-            if merge_field in values:
-                content = content.replace("{{" + merge_field + "}}", values[merge_field][0])
-        return content
-
-    def __get_ebook_values(self):
+    def __set_ebook_values(self):
         self.ebook_values = {}
         values_settings = self.settings_dict["ebook-values"]
         for value in values_settings:
@@ -90,6 +59,50 @@ class WebBook(epub.EpubBook):
                 if values != None:
                     new_values += self.__get_aggregate(setting_split[1], values)
             self.ebook_values[value] = new_values
+
+    def __set_values_list(self):
+        self.values_list = []
+        for link in self.links:
+            self.values_list.append(self.__get_values(link))
+
+    def __set_links(self):
+        self.links = []
+        sources = self.settings_dict["sources"]
+        if "links" in sources:
+            self.links += sources["links"]
+        if "link-pages" in sources:
+            for link_page in sources["link-pages"]:
+                page = requests.get(link_page["url"])
+                soup = BeautifulSoup(page.content, "html.parser")
+                new_links = self.__parse_soup(soup, link_page["find"], link_page["url"])
+                absolute_links = list(map(lambda x: urljoin(link_page["url"], x), new_links))
+                self.links += absolute_links
+
+    def __set_metadata(self):
+        if "id" in self.ebook_values:
+            self.set_identifier(self.ebook_values["id"][0])
+        if "title" in self.ebook_values:
+            self.set_title(self.ebook_values["title"][0])
+        if "language" in self.ebook_values:
+            self.set_language(self.ebook_values["language"][0])
+            self.default_language = self.ebook_values["language"][0]
+        if "authors" in self.ebook_values:
+            for author in self.ebook_values["authors"]:
+                self.add_author(author)
+
+    def __set_templates(self):
+        template_files = self.settings_dict['template-files']
+        with open("template/" + template_files["chapter"], "r") as f:
+            self.chapter_template = f.read()
+        with open("template/" + template_files["css"], "r") as f:
+            self.css_template = f.read()
+
+    def __create_chapters(self):
+        for values in self.values_list:
+            c1 = epub.EpubHtml(title=values["title"][0], file_name=values["title"][0] + ".xhtml", lang=self.default_language)
+            c1.content = self.__merge_content(self.chapter_template, values)
+            self.add_item(c1)
+            self.spine.append(c1)
 
     def __get_values(self, url):
         values = {}
@@ -111,24 +124,6 @@ class WebBook(epub.EpubBook):
                 if setting_split[0] in values:
                     values[value] += self.__get_aggregate(setting_split[1], values[setting_split[0]])
         return values
-
-    def __get_values_list(self):
-        self.values_list = []
-        for link in self.links:
-            self.values_list.append(self.__get_values(link))
-
-    def __get_links(self):
-        self.links = []
-        sources = self.settings_dict["sources"]
-        if "links" in sources:
-            self.links += sources["links"]
-        if "link-pages" in sources:
-            for link_page in sources["link-pages"]:
-                page = requests.get(link_page["url"])
-                soup = BeautifulSoup(page.content, "html.parser")
-                new_links = self.__parse_soup(soup, link_page["find"], link_page["url"])
-                absolute_links = list(map(lambda x: urljoin(link_page["url"], x), new_links))
-                self.links += absolute_links
 
     def __get_images(self, soup, url):
         images = soup.find_all("img")
@@ -203,3 +198,11 @@ class WebBook(epub.EpubBook):
         else:
             results = soup.find_all(rule)
         return results
+
+    def __merge_content(self, template, values):
+        content = template
+        merge_fields = re.findall("{{(.*)}}", template)
+        for merge_field in merge_fields:
+            if merge_field in values:
+                content = content.replace("{{" + merge_field + "}}", values[merge_field][0])
+        return content

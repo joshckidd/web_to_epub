@@ -7,6 +7,8 @@ values:
     find: h1 text
   content:
     find: article div
+  static-test:
+    static: test
 ebook-values:
   id: 
     static: uri:https://joshckidd.github.io/static_site/
@@ -16,6 +18,8 @@ ebook-values:
     static: en
   file-name:
     static: test.epub
+  titles:
+    aggregate: title join " and "
 template-files:
   chapter: template_test.html
   css: template_test.css
