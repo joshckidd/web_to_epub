@@ -20,8 +20,6 @@ class WebBook(epub.EpubBook):
         self.__set_templates()
         self.toc = []
         self.__create_chapters()
-
-        # add default NCX and Nav file
         self.add_item(epub.EpubNcx())
         self.add_item(epub.EpubNav())
 
@@ -43,17 +41,18 @@ class WebBook(epub.EpubBook):
 
     def __set_ebook_values(self):
         self.ebook_values = {}
-        values_settings = self.settings_dict["ebook-values"]
-        for value in values_settings:
-            new_values = []
-            if "static" in values_settings[value]:
-                new_values.append(values_settings[value]["static"])
-            if "aggregate" in values_settings[value]:
-                setting_split = values_settings[value]["aggregate"].split(" ", 1)
-                values = self.__get_all_values(setting_split[0])
-                if values != None:
-                    new_values += self.__get_aggregate(setting_split[1], values)
-            self.ebook_values[value] = new_values
+        if "ebook-values" in self.settings_dict:
+            values_settings = self.settings_dict["ebook-values"]
+            for value in values_settings:
+                new_values = []
+                if "static" in values_settings[value]:
+                    new_values.append(values_settings[value]["static"])
+                if "aggregate" in values_settings[value]:
+                    setting_split = values_settings[value]["aggregate"].split(" ", 1)
+                    values = self.__get_all_values(setting_split[0])
+                    if values != None:
+                        new_values += self.__get_aggregate(setting_split[1], values)
+                self.ebook_values[value] = new_values
 
     def __set_values_list(self):
         self.values_list = []
@@ -62,18 +61,20 @@ class WebBook(epub.EpubBook):
 
     def __set_links(self):
         self.links = []
-        sources = self.settings_dict["sources"]
-        if "links" in sources:
-            self.links += sources["links"]
-        if "link-pages" in sources:
-            for link_page in sources["link-pages"]:
-                page = requests.get(link_page["url"])
-                soup = BeautifulSoup(page.content, "html.parser")
-                new_links = self.__parse_soup(soup, link_page["find"], link_page["url"])
-                absolute_links = list(map(lambda x: urljoin(link_page["url"], x), new_links))
-                self.links += absolute_links
+        if "sources" in self.settings_dict:
+            sources = self.settings_dict["sources"]
+            if "links" in sources:
+                self.links += sources["links"]
+            if "link-pages" in sources:
+                for link_page in sources["link-pages"]:
+                    page = requests.get(link_page["url"])
+                    soup = BeautifulSoup(page.content, "html.parser")
+                    new_links = self.__parse_soup(soup, link_page["find"], link_page["url"])
+                    absolute_links = list(map(lambda x: urljoin(link_page["url"], x), new_links))
+                    self.links += absolute_links
 
     def __set_metadata(self):
+        self.default_language = ""
         if "id" in self.ebook_values:
             self.set_identifier(self.ebook_values["id"][0])
         if "title" in self.ebook_values:
@@ -86,15 +87,21 @@ class WebBook(epub.EpubBook):
                 self.add_author(author)
 
     def __set_templates(self):
-        template_files = self.settings_dict['template-files']
-        with open("template/" + template_files["chapter"], "r") as f:
-            self.chapter_template = f.read()
-        with open("template/" + template_files["css"], "r") as f:
-            self.css_template = f.read()
+        if "template-files" in self.settings_dict:
+            template_files = self.settings_dict['template-files']
+            if "chapter" in template_files:
+                with open("template/" + template_files["chapter"], "r") as f:
+                    self.chapter_template = f.read()
+            if "css" in template_files:
+                with open("template/" + template_files["css"], "r") as f:
+                    self.css_template = f.read()
 
     def __create_chapters(self):
         for values in self.values_list:
-            c1 = epub.EpubHtml(title=values["title"][0], file_name=values["title"][0] + ".xhtml", lang=self.default_language)
+            title = ""
+            if "title" in values:
+                title = values["title"][0]
+            c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language)
             c1.content = self.__merge_content(self.chapter_template, values)
             self.add_item(c1)
             self.spine.append(c1)
@@ -102,24 +109,25 @@ class WebBook(epub.EpubBook):
 
     def __get_values(self, url):
         values = {}
-        values_settings = self.settings_dict["values"]
-        page = requests.get(url)
-        soup = BeautifulSoup(page.content, "html.parser")
-        for value in values_settings:
-            new_values = []
-            if "static" in values_settings[value]:
-                new_values.append(values_settings[value]["static"])
-            if "find" in values_settings[value]:
-                new_values += self.__parse_soup(soup, values_settings[value]["find"], url)
-            if "remove" in values_settings[value]:
-                new_values = list(map(lambda x: self.__remove_tags(x, values_settings[value]["remove"]), new_values))
-            values[value] = new_values
-        for value in values:
-            if "aggregate" in values_settings[value]:
-                setting_split = values_settings[value]["aggregate"].split(" ", 1)
-                if setting_split[0] in values:
-                    values[value] += self.__get_aggregate(setting_split[1], values[setting_split[0]])
-        return values
+        if "values" in self.settings_dict:
+            values_settings = self.settings_dict["values"]
+            page = requests.get(url)
+            soup = BeautifulSoup(page.content, "html.parser")
+            for value in values_settings:
+                new_values = []
+                if "static" in values_settings[value]:
+                    new_values.append(values_settings[value]["static"])
+                if "find" in values_settings[value]:
+                    new_values += self.__parse_soup(soup, values_settings[value]["find"], url)
+                if "remove" in values_settings[value]:
+                    new_values = list(map(lambda x: self.__remove_tags(x, values_settings[value]["remove"]), new_values))
+                values[value] = new_values
+            for value in values:
+                if "aggregate" in values_settings[value]:
+                    setting_split = values_settings[value]["aggregate"].split(" ", 1)
+                    if setting_split[0] in values:
+                        values[value] += self.__get_aggregate(setting_split[1], values[setting_split[0]])
+            return values
 
     def __get_images(self, soup, url):
         images = soup.find_all("img")

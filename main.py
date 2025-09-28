@@ -7,6 +7,7 @@ from src.web_book import WebBook
 # add sections 
 # add pages 
 # add cover
+# css function
 # add documentation
 
 def main():
