@@ -7,8 +7,10 @@ values:
     find: h1 text
   content:
     find: article div
-  static-test:
-    static: test
+  author:
+    static: Boots
+  title-and-author:
+    template: "{{title}} by {{author}}"
 ebook-values:
   id: 
     static: uri:https://joshckidd.github.io/static_site/
@@ -20,6 +22,8 @@ ebook-values:
     static: test.epub
   titles:
     aggregate: title join " and "
+  chapter-title:
+    static: title-and-author
 template-files:
   chapter: template_test.html
   css: template_test.css

@@ -99,8 +99,8 @@ class WebBook(epub.EpubBook):
     def __create_chapters(self):
         for values in self.values_list:
             title = ""
-            if "title" in values:
-                title = values["title"][0]
+            if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
+                title = values[self.ebook_values["chapter-title"][0]][0]
             c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language)
             c1.content = self.__merge_content(self.chapter_template, values)
             self.add_item(c1)
@@ -127,6 +127,9 @@ class WebBook(epub.EpubBook):
                     setting_split = values_settings[value]["aggregate"].split(" ", 1)
                     if setting_split[0] in values:
                         values[value] += self.__get_aggregate(setting_split[1], values[setting_split[0]])
+            for value in values:
+                if "template" in values_settings[value]:
+                    values[value].append(self.__merge_content(values_settings[value]["template"], values))
             return values
 
     def __get_images(self, soup, url):
@@ -205,7 +208,7 @@ class WebBook(epub.EpubBook):
 
     def __merge_content(self, template, values):
         content = template
-        merge_fields = re.findall("{{(.*)}}", template)
+        merge_fields = re.findall("{{([^}]*)}}", template)
         for merge_field in merge_fields:
             if merge_field in values:
                 content = content.replace("{{" + merge_field + "}}", values[merge_field][0])
