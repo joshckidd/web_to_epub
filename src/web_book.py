@@ -23,17 +23,7 @@ class WebBook(epub.EpubBook):
         self.__create_chapters()
         self.add_item(epub.EpubNcx())
         self.add_item(epub.EpubNav())
-
-        # define CSS style
-        nav_css = epub.EpubItem(
-            uid="style_nav",
-            file_name="style/nav.css",
-            media_type="text/css",
-            content=self.css_template,
-        )
-
-        # add CSS file
-        self.add_item(nav_css)
+        self.__set_css()
 
     def write_book(self):
         # write to the file
@@ -240,3 +230,12 @@ class WebBook(epub.EpubBook):
                 for value in values:
                     if value not in self.values_order:
                         self.values_order.append(value)
+
+    def __set_css(self):
+        nav_css = epub.EpubItem(
+            uid="style_nav",
+            file_name="style/nav.css",
+            media_type="text/css",
+            content=self.css_template,
+        )
+        self.add_item(nav_css)

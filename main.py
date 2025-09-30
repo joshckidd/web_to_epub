@@ -6,8 +6,11 @@ from src.web_book import WebBook
 # add sections 
 # add pages 
 # add cover
-# css function
 # tests for toc and template values
+# tests for css
+# tests for sections
+# tests for pages
+# tests for cover
 # add documentation
 
 def main():
