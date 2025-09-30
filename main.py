@@ -3,7 +3,6 @@ from src.settings import get_settings, TEMPLATE_DIR
 from src.web_book import WebBook
 
 # tasks to finish:
-# add pages 
 # add cover
 # tests for toc and template values
 # tests for css

@@ -7,11 +7,23 @@ from bs4 import BeautifulSoup
 from ebooklib import epub
 # Use this for doc reference: https://pypi.org/project/EbookLib/
 
+DEFAULT_CHAPTER ="""
+{{content}}
+"""
+
+DEFAULT_CSS = """
+BODY {color: white;}
+"""
+
+DEFAULT_SECTION = """
+<h1>{{current-section}}</h1>
+"""
+
 class WebBook(epub.EpubBook):
 
     def __init__(self, settings_dict):
         super().__init__()
-        self.spine = ["nav"]
+        self.spine = []
         self.settings_dict = settings_dict
         self.__set_links()
         self.__set_values_order()
@@ -19,7 +31,12 @@ class WebBook(epub.EpubBook):
         self.__set_ebook_values()
         self.__set_metadata()
         self.__set_templates()
+        if "pages" in settings_dict and "before-toc" in settings_dict["pages"]:
+            self.__set_pages(settings_dict["pages"]["before-toc"])
+        self.spine.append("nav")
         self.toc = []
+        if "pages" in settings_dict and "before-sections" in settings_dict["pages"]:
+            self.toc += self.__set_pages(settings_dict["pages"]["before-sections"])        
         self.__set_sections()
         self.add_item(epub.EpubNcx())
         self.add_item(epub.EpubNav())
@@ -78,17 +95,26 @@ class WebBook(epub.EpubBook):
                 self.add_author(author)
 
     def __set_templates(self):
+        self.page_templates = {}
+        self.chapter_template = DEFAULT_CHAPTER
+        self.css_template = DEFAULT_CSS
+        self.section_template = DEFAULT_SECTION
         if "template-files" in self.settings_dict:
             template_files = self.settings_dict['template-files']
-            if "chapter" in template_files:
-                with open("template/" + template_files["chapter"], "r") as f:
-                    self.chapter_template = f.read()
-            if "css" in template_files:
-                with open("template/" + template_files["css"], "r") as f:
-                    self.css_template = f.read()
-            if "section" in template_files:
-                with open("template/" + template_files["section"], "r") as f:
-                    self.section_template = f.read()
+            for template in template_files:
+                if template == "chapter":
+                    with open("template/" + template_files["chapter"], "r") as f:
+                        self.chapter_template = f.read()
+                elif template == "css":
+                    with open("template/" + template_files["css"], "r") as f:
+                        self.css_template = f.read()
+                elif template == "section":
+                    with open("template/" + template_files["section"], "r") as f:
+                        self.section_template = f.read()
+                else:
+                    with open("template/" + template_files[template], "r") as f:
+                        self.page_templates[template] = f.read()
+
 
     def __create_chapters(self, section=None):
         chapter_list = []
@@ -246,7 +272,6 @@ class WebBook(epub.EpubBook):
         self.add_item(nav_css)
 
     def __set_sections(self):
-        new_toc = []
         if "sections" in self.ebook_values and "section-value" in self.ebook_values:
             for section in self.ebook_values["sections"][0]:
                 self.ebook_values["current-section"] = [section]
@@ -263,3 +288,13 @@ class WebBook(epub.EpubBook):
             self.toc += clist
             self.spine += clist
 
+    def __set_pages(self, pages):
+        toc_list = []
+        for page in pages:
+            if "name" in page and "template" in page and page["template"] in self.page_templates:
+                id_name = page["name"].lower().replace(" ", "-")
+                p1 = epub.EpubHtml(uid=id_name, file_name=id_name + ".xhtml", content=self.__merge_content(self.page_templates[page["template"]], self.ebook_values), title=page["name"])
+                self.add_item(p1)
+                self.spine.append(p1)
+                toc_list.append(p1)
+        return toc_list
