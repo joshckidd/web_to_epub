@@ -31,6 +31,7 @@ class WebBook(epub.EpubBook):
         self.__set_ebook_values()
         self.__set_metadata()
         self.__set_templates()
+        self.__create_cover()
         if "pages" in settings_dict and "before-toc" in settings_dict["pages"]:
             self.__set_pages(settings_dict["pages"]["before-toc"])
         self.spine.append("nav")
@@ -298,3 +299,11 @@ class WebBook(epub.EpubBook):
                 self.spine.append(p1)
                 toc_list.append(p1)
         return toc_list
+    
+    def __create_cover(self):
+        if "cover" in self.ebook_values:
+            with open("template/" + self.ebook_values["cover"][0], "rb") as f:
+                image_content = f.read()
+            self.set_cover(content=image_content, file_name="static/" + self.ebook_values["cover"][0])
+            self.get_item_with_id("cover").is_linear = True
+            self.spine.append("cover")
