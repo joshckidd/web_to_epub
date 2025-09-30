@@ -20,7 +20,7 @@ class WebBook(epub.EpubBook):
         self.__set_metadata()
         self.__set_templates()
         self.toc = []
-        self.__create_chapters()
+        self.__set_sections()
         self.add_item(epub.EpubNcx())
         self.add_item(epub.EpubNav())
         self.__set_css()
@@ -86,17 +86,22 @@ class WebBook(epub.EpubBook):
             if "css" in template_files:
                 with open("template/" + template_files["css"], "r") as f:
                     self.css_template = f.read()
+            if "section" in template_files:
+                with open("template/" + template_files["section"], "r") as f:
+                    self.section_template = f.read()
 
-    def __create_chapters(self):
+    def __create_chapters(self, section=None):
+        chapter_list = []
         for values in self.values_list:
-            title = ""
-            if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
-                title = values[self.ebook_values["chapter-title"][0]][0]
-            c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language)
-            c1.content = self.__merge_content(self.chapter_template, values)
-            self.add_item(c1)
-            self.spine.append(c1)
-            self.toc.append(c1)
+            if section == None or section in values[self.ebook_values["section-value"][0]]:
+                title = ""
+                if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
+                    title = values[self.ebook_values["chapter-title"][0]][0]
+                c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language)
+                c1.content = self.__merge_content(self.chapter_template, values)
+                self.add_item(c1)
+                chapter_list.append(c1)
+        return chapter_list
 
     def __get_values(self, url):
         values = {}
@@ -239,3 +244,22 @@ class WebBook(epub.EpubBook):
             content=self.css_template,
         )
         self.add_item(nav_css)
+
+    def __set_sections(self):
+        new_toc = []
+        if "sections" in self.ebook_values and "section-value" in self.ebook_values:
+            for section in self.ebook_values["sections"][0]:
+                self.ebook_values["current-section"] = [section]
+                clist = self.__create_chapters(section=section)
+                if len(clist) > 0:
+                    s1page = epub.EpubHtml(uid=section, file_name=section + ".xhtml", content=self.__merge_content(self.section_template, self.ebook_values), title=section)
+                    self.add_item(s1page)
+                    self.spine.append(s1page)
+                    s1 = epub.Section(section, href=section + ".xhtml")
+                    self.spine += clist
+                    self.toc.append([s1, clist])
+        else:
+            clist = self.__create_chapters()
+            self.toc += clist
+            self.spine += clist
+
