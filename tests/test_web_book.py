@@ -20,13 +20,46 @@ class TestWebBook(unittest.TestCase):
         self.assertEqual(self.book.ebook_values["titles"][0], 'Why Glorfindel is More Impressive than Legolas and Why Tom Bombadil Was a Mistake and The Unparalleled Majesty of "The Lord of the Rings"', "The article titles are wrong.")
 
     def test_images(self):
-        self.assertEqual(self.book.items[0].id, "image_glorfindel.png", "The first image id is wrong.")
-        self.assertEqual(self.book.items[0].file_name, "static/glorfindel.png", "The first image file name is wrong.")
+        item = self.book.get_item_with_id("image_glorfindel.png")
+        self.assertEqual(item.id, "image_glorfindel.png", "The first image id is wrong.")
+        self.assertEqual(item.file_name, "static/glorfindel.png", "The first image file name is wrong.")
 
     def test_metadata(self):
         self.assertEqual(self.book.uid, "uri:https://joshckidd.github.io/static_site/", "The book uid is wrong.")
         self.assertEqual(self.book.title, "WebBook Test", "The book title is wrong.")
 
     def test_chapters(self):
-        self.assertEqual(self.book.items[3].id, "chapter_0", "The first chapter id is wrong.")
-        self.assertIn("<p>In J.R.R. Tolkien's legendarium", self.book.items[3].content, "The first chapter content is wrong.")
+        item = self.book.get_item_with_id("chapter_0")
+        self.assertEqual(item.id, "chapter_0", "The first chapter id is wrong.")
+        self.assertIn("<p>In J.R.R. Tolkien's legendarium", item.content, "The first chapter content is wrong.")
+        self.assertNotIn("<code>", item.content, "The first chapter content is wrong.")
+
+    def test_cover(self):
+        item = self.book.get_item_with_id("cover")
+        self.assertEqual(item.id, "cover", "The cover id is wrong.")
+        self.assertEqual(item.file_name, "cover.xhtml", "The cover file name is wrong.")
+
+    def test_toc(self):
+        item = self.book.get_item_with_id("nav")
+        self.assertEqual(item.id, "nav", "The toc id is wrong.")
+        self.assertEqual(item.file_name, "nav.xhtml", "The toc file name is wrong.")
+        item = self.book.toc[1][1][0]
+        self.assertIn('Why Glorfindel is More Impressive than Legolas by Boots', item.title, "The first chapter name is wrong.")
+
+    def test_css(self):
+        item = self.book.get_item_with_id("style_nav")
+        self.assertEqual(item.id, "style_nav", "The css id is wrong.")
+        self.assertEqual(item.file_name, "style/nav.css", "The css file name is wrong.")
+        self.assertIn('BODY {color: white;}', item.content, "The css content is wrong.")
+
+    def test_page(self):
+        item = self.book.get_item_with_id("title-page")
+        self.assertEqual(item.id, "title-page", "The title page id is wrong.")
+        self.assertEqual(item.file_name, "title-page.xhtml", "The title page file name is wrong.")
+        self.assertIn('<h1>WebBook Test</h1>', item.content, "The title page content is wrong.")
+
+    def test_section(self):
+        item = self.book.get_item_with_id("blog-posts")
+        self.assertEqual(item.id, "blog-posts", "The section page id is wrong.")
+        self.assertEqual(item.file_name, "blog-posts.xhtml", "The section page file name is wrong.")
+        self.assertIn('<h1>Blog Posts</h1>', item.content, "The section page content is wrong.")

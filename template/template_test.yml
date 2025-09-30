@@ -7,10 +7,14 @@ values:
     find: h1 text
   content:
     find: article div
+    remove:
+      - code
   author:
     static: Boots
   title-and-author:
     template: "{{title}} by {{author}}"
+  category: 
+    static: Blog Posts
 ebook-values:
   id: 
     static: uri:https://joshckidd.github.io/static_site/
@@ -24,6 +28,22 @@ ebook-values:
     aggregate: title join " and "
   chapter-title:
     static: title-and-author
+  cover:
+    static: template_test.png
+  section-value:
+    static: category
+  sections:
+    static:
+      - Blog Posts
+pages:
+  before-toc:
+    - name: Title Page
+      template: title
+  before-sections:
+    - name: Hello World
+      template: hello-world
 template-files:
   chapter: template_test.html
   css: template_test.css
+  title: template_test_title.html
+  hello-world: template_test_hw.html
