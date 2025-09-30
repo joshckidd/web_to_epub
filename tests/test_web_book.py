@@ -16,7 +16,7 @@ class TestWebBook(unittest.TestCase):
     def test_values(self):
         values = self.book.values_list[0]
         self.assertEqual(values["title"][0], "Why Glorfindel is More Impressive than Legolas", "The first title is wrong.")
-        self.assertEqual(values["static-test"][0], "test", "The statis test value is wrong.")
+        self.assertEqual(values["author"][0], "Boots", "The author value is wrong.")
         self.assertEqual(self.book.ebook_values["titles"][0], 'Why Glorfindel is More Impressive than Legolas and Why Tom Bombadil Was a Mistake and The Unparalleled Majesty of "The Lord of the Rings"', "The article titles are wrong.")
 
     def test_images(self):

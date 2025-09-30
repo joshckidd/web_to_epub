@@ -14,6 +14,7 @@ class WebBook(epub.EpubBook):
         self.spine = ["nav"]
         self.settings_dict = settings_dict
         self.__set_links()
+        self.__set_values_order()
         self.__set_values_list()
         self.__set_ebook_values()
         self.__set_metadata()
@@ -113,7 +114,7 @@ class WebBook(epub.EpubBook):
             values_settings = self.settings_dict["values"]
             page = requests.get(url)
             soup = BeautifulSoup(page.content, "html.parser")
-            for value in values_settings:
+            for value in self.values_order:
                 new_values = []
                 if "static" in values_settings[value]:
                     new_values.append(values_settings[value]["static"])
@@ -121,15 +122,13 @@ class WebBook(epub.EpubBook):
                     new_values += self.__parse_soup(soup, values_settings[value]["find"], url)
                 if "remove" in values_settings[value]:
                     new_values = list(map(lambda x: self.__remove_tags(x, values_settings[value]["remove"]), new_values))
-                values[value] = new_values
-            for value in values:
                 if "aggregate" in values_settings[value]:
                     setting_split = values_settings[value]["aggregate"].split(" ", 1)
                     if setting_split[0] in values:
-                        values[value] += self.__get_aggregate(setting_split[1], values[setting_split[0]])
-            for value in values:
+                        new_values += self.__get_aggregate(setting_split[1], values[setting_split[0]])
                 if "template" in values_settings[value]:
-                    values[value].append(self.__merge_content(values_settings[value]["template"], values))
+                    new_values.append(self.__merge_content(values_settings[value]["template"], values))
+                values[value] = new_values                
             return values
 
     def __get_images(self, soup, url):
@@ -213,3 +212,31 @@ class WebBook(epub.EpubBook):
             if merge_field in values:
                 content = content.replace("{{" + merge_field + "}}", values[merge_field][0])
         return content
+
+    def __set_values_order(self):
+        self.values_order = []
+        if "values" in self.settings_dict:
+            values = self.settings_dict["values"]
+            current_length = -1
+            while current_length < len(self.values_order):
+                current_length = len(self.values_order)
+                for value in values:
+                    if value not in self.values_order:
+                        if "aggregate" not in values[value] and "template" not in values[value]:
+                            self.values_order.append(value)
+                        else:
+                            dependencies = set()
+                            if "aggregate" in values[value]:
+                                dependencies.add(values[value]["aggregate"].split(" ", 1)[0])
+                            if "template" in values[value]:
+                                dependencies.update(re.findall("{{([^}]*)}}", values[value]["template"]))
+                            met_dependencies = set()
+                            for dependency in dependencies:
+                                if dependency in self.values_order:
+                                    met_dependencies.add(dependency)
+                            if len(dependencies) == len(met_dependencies):
+                                self.values_order.append(value)
+            if len(self.values_order) < len(values):
+                for value in values:
+                    if value not in self.values_order:
+                        self.values_order.append(value)

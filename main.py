@@ -7,7 +7,6 @@ from src.web_book import WebBook
 # add pages 
 # add cover
 # css function
-# better handling of order for value generation
 # tests for toc and template values
 # add documentation
 
