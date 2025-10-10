@@ -5,7 +5,6 @@ import re
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from ebooklib import epub
-# Use this for doc reference: https://pypi.org/project/EbookLib/
 
 DEFAULT_CHAPTER ="""
 {{content}}
@@ -34,6 +33,7 @@ class WebBook(epub.EpubBook):
         self.__set_ebook_values()
         self.__set_metadata()
         self.__set_templates()
+        self.__set_css()
         self.__create_cover()
         if "pages" in settings_dict and "before-toc" in settings_dict["pages"]:
             self.__set_pages(settings_dict["pages"]["before-toc"])
@@ -44,7 +44,8 @@ class WebBook(epub.EpubBook):
         self.__set_sections()
         self.add_item(epub.EpubNcx())
         self.add_item(epub.EpubNav())
-        self.__set_css()
+        item = self.get_item_with_id("nav")
+        item.add_item(self.default_css)
 
     # write_book should be the only public method. It writes the ebook to the file specified in the yaml file. Directly 
     # calling any other function could result in weird things happening.
@@ -103,6 +104,8 @@ class WebBook(epub.EpubBook):
         if "authors" in self.ebook_values:
             for author in self.ebook_values["authors"]:
                 self.add_author(author)
+        if "publisher" in self.ebook_values:
+            self.set_unique_metadata(namespace="DC", name="publisher", value=self.ebook_values["publisher"][0])
 
     # Set templates to be used for the ebook based on rules specified in the yaml file.
     def __set_templates(self):
@@ -136,8 +139,9 @@ class WebBook(epub.EpubBook):
                 title = ""
                 if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
                     title = values[self.ebook_values["chapter-title"][0]][0]
-                c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language)
+                c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language, )
                 c1.content = self.__merge_content(self.chapter_template, values)
+                c1.add_item(self.default_css)
                 self.add_item(c1)
                 chapter_list.append(c1)
         return chapter_list
@@ -285,13 +289,13 @@ class WebBook(epub.EpubBook):
 
     # Set the css file to the one specified in the yaml file.
     def __set_css(self):
-        nav_css = epub.EpubItem(
-            uid="style_nav",
-            file_name="style/nav.css",
+        self.default_css = epub.EpubItem(
+            uid="css_css1",
+            file_name="styles.css",
             media_type="text/css",
             content=self.css_template,
         )
-        self.add_item(nav_css)
+        self.add_item(self.default_css)
 
     # Create the sections for the ebook. Or just create chapters for the ebook if no sections are specified in the yaml file.
     def __set_sections(self):
@@ -302,6 +306,7 @@ class WebBook(epub.EpubBook):
                 clist = self.__create_chapters(section=section)
                 if len(clist) > 0:
                     s1page = epub.EpubHtml(uid=id_name, file_name=id_name + ".xhtml", content=self.__merge_content(self.section_template, self.ebook_values), title=section)
+                    s1page.add_item(self.default_css)
                     self.add_item(s1page)
                     self.spine.append(s1page)
                     s1 = epub.Section(section, href=id_name + ".xhtml")
@@ -319,6 +324,7 @@ class WebBook(epub.EpubBook):
             if "name" in page and "template" in page and page["template"] in self.page_templates:
                 id_name = page["name"].lower().replace(" ", "-")
                 p1 = epub.EpubHtml(uid=id_name, file_name=id_name + ".xhtml", content=self.__merge_content(self.page_templates[page["template"]], self.ebook_values), title=page["name"])
+                p1.add_item(self.default_css)
                 self.add_item(p1)
                 self.spine.append(p1)
                 toc_list.append(p1)

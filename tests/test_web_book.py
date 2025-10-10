@@ -47,9 +47,9 @@ class TestWebBook(unittest.TestCase):
         self.assertIn('Why Glorfindel is More Impressive than Legolas by Boots', item.title, "The first chapter name is wrong.")
 
     def test_css(self):
-        item = self.book.get_item_with_id("style_nav")
-        self.assertEqual(item.id, "style_nav", "The css id is wrong.")
-        self.assertEqual(item.file_name, "style/nav.css", "The css file name is wrong.")
+        item = self.book.get_item_with_id("css_css1")
+        self.assertEqual(item.id, "css_css1", "The css id is wrong.")
+        self.assertEqual(item.file_name, "styles.css", "The css file name is wrong.")
         self.assertIn('BODY {color: white;}', item.content, "The css content is wrong.")
 
     def test_page(self):
