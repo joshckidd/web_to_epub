@@ -253,8 +253,10 @@ class WebBook(epub.EpubBook):
         content = template
         merge_fields = re.findall("{{([^}]*)}}", template)
         for merge_field in merge_fields:
-            if merge_field in values:
+            if merge_field in values and len(values[merge_field]) > 0:
                 content = content.replace("{{" + merge_field + "}}", values[merge_field][0])
+            else:
+                return ""
         return content
 
     # Template and aggregate rules depend on other values. This function orders the values so that dependencies are
