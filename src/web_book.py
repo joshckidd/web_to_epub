@@ -199,7 +199,7 @@ class WebBook(epub.EpubBook):
                 joiner = rule_split[1]
             return [joiner.join(values)]
         if rule_split[0] == "list":
-            return values
+            return list(set(values))
 
     # Used for ebook level aggregations, when a list of all values from each chapter is desired.        
     def __get_all_values(self, value):
@@ -338,3 +338,12 @@ class WebBook(epub.EpubBook):
             self.set_cover(content=image_content, file_name="static/" + self.ebook_values["cover"][0])
             self.get_item_with_id("cover").is_linear = True
             self.spine.append("cover")
+
+    # Define a new set_identifier method to properly handle uri values
+    def set_identifier(self, uid):
+        self.uid = uid
+        others = {'id': self.IDENTIFIER_ID}
+        if uid[:7] == "http://" or uid[:8] == "https://":
+            others["{http://www.idpf.org/2007/opf}scheme"] = "URI"
+
+        self.set_unique_metadata('DC', 'identifier', self.uid, others)
