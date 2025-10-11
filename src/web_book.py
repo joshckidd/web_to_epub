@@ -2,6 +2,7 @@ import os
 import mimetypes
 import requests
 import re
+from slugify import slugify
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from ebooklib import epub
@@ -147,7 +148,8 @@ class WebBook(epub.EpubBook):
                 title = ""
                 if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
                     title = values[self.ebook_values["chapter-title"][0]][0]
-                c1 = epub.EpubHtml(title=title, file_name=title + ".xhtml", lang=self.default_language, )
+                id_name = slugify(title)
+                c1 = epub.EpubHtml(title=title, file_name=id_name + ".xhtml", lang=self.default_language, )
                 c1.content = self.__merge_content(self.chapter_template, values)
                 c1.add_item(self.default_css)
                 self.add_item(c1)
@@ -311,7 +313,7 @@ class WebBook(epub.EpubBook):
     def __set_sections(self):
         if "sections" in self.ebook_values and "section-value" in self.ebook_values:
             for section in self.ebook_values["sections"][0]:
-                id_name = section.lower().replace(" ", "-")
+                id_name = slugify(section)
                 self.ebook_values["current-section"] = [section]
                 clist = self.__create_chapters(section=section)
                 if len(clist) > 0:
