@@ -5,6 +5,7 @@ import re
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from ebooklib import epub
+from lxml import etree
 
 DEFAULT_CHAPTER ="""
 {{content}}
@@ -51,7 +52,9 @@ class WebBook(epub.EpubBook):
     # calling any other function could result in weird things happening.
     def write_book(self):
         if "file-name" in self.ebook_values:
-            epub.write_epub("output/" + self.ebook_values["file-name"][0], self, {})
+            writer = WebBookWriter("output/" + self.ebook_values["file-name"][0], self, {})
+            writer.process()
+            writer.write()
 
     # Set the values for the ebook as a whole, based on the rules provided in the yaml file.
     def __set_ebook_values(self):
@@ -351,6 +354,44 @@ class WebBook(epub.EpubBook):
         self.uid = uid
         others = {'id': self.IDENTIFIER_ID}
         if uid[:7] == "http://" or uid[:8] == "https://":
-            others["{http://www.idpf.org/2007/opf}scheme"] = "URI"
+            others["{" + epub.NAMESPACES["OPF"] + "}scheme"] = "URI"
 
         self.set_unique_metadata('DC', 'identifier', self.uid, others)
+
+# Extending EpubWriter because there's metadata that it isn't currently writing
+class WebBookWriter(epub.EpubWriter):
+
+    def __init__(self, name, book, options=None):
+        super().__init__(name, book, options)
+
+    # Define a new _write_opf method to include xml:lang
+    def _write_opf(self):
+        package_attributes = {'xmlns': epub.NAMESPACES['OPF'],
+                              'unique-identifier': self.book.IDENTIFIER_ID,
+                              '{' + epub.NAMESPACES["XML"] + '}lang': self.book.default_language,
+                              'version': '3.0'}
+        if self.book.direction and self.options['package_direction']:
+            package_attributes['dir'] = self.book.direction
+
+        root = etree.Element('package', package_attributes)
+
+        prefixes = ['rendition: http://www.idpf.org/vocab/rendition/#'] + self.book.prefixes
+        root.attrib['prefix'] = ' '.join(prefixes)
+
+        # METADATA
+        self._write_opf_metadata(root)
+
+        # MANIFEST
+        _ncx_id = self._write_opf_manifest(root)
+
+        # SPINE
+        self._write_opf_spine(root, _ncx_id)
+
+        # GUIDE
+        self._write_opf_guide(root)
+
+        # BINDINGS
+        self._write_opf_bindings(root)
+
+        # WRITE FILE
+        self._write_opf_file(root)
