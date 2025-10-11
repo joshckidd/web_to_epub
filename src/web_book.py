@@ -71,6 +71,21 @@ class WebBook(epub.EpubBook):
                     values = self.__get_all_values(setting_split[0])
                     if values != None:
                         new_values += self.__get_aggregate(setting_split[1], values)
+                if "aggregate-section" in values_settings[value]:
+                    aggregate_section_value = ""
+                    if "sections" in self.ebook_values and "section-value" in self.ebook_values:
+                        for section in self.ebook_values["sections"][0]:
+                            section_values = {"section": [section]}
+                            if "aggregate" in values_settings[value]["aggregate-section"]:
+                                aggregate = values_settings[value]["aggregate-section"]["aggregate"]
+                                aggregate_split = aggregate.split(" ", 1)
+                                values = self.__get_all_values(aggregate_split[0], section=section)
+                                if values != None:
+                                    section_values["aggregate"] = self.__get_aggregate(aggregate_split[1], values)
+                                    if section_values["aggregate"][0] != "" and "template" in values_settings[value]["aggregate-section"]:
+                                        aggregate_content = self.__merge_content(values_settings[value]["aggregate-section"]["template"], section_values)
+                                        aggregate_section_value += aggregate_content
+                    new_values += [aggregate_section_value]
                 self.ebook_values[value] = new_values
 
     # Each link is scraped for values for an individual chapter. The values dictionary for each individual chapter is stored 
@@ -171,6 +186,8 @@ class WebBook(epub.EpubBook):
                     new_values += self.__parse_soup(soup, values_settings[value]["find"], url)
                 if "remove" in values_settings[value]:
                     new_values = list(map(lambda x: self.__remove_tags(x, values_settings[value]["remove"]), new_values))
+                if "change-tag" in values_settings[value]:
+                    new_values = list(map(lambda x: self.__change_tags(x, values_settings[value]["change-tag"]), new_values))
                 if "aggregate" in values_settings[value]:
                     setting_split = values_settings[value]["aggregate"].split(" ", 1)
                     if setting_split[0] in values:
@@ -220,10 +237,11 @@ class WebBook(epub.EpubBook):
             return list(set(values))
 
     # Used for ebook level aggregations, when a list of all values from each chapter is desired.        
-    def __get_all_values(self, value):
+    def __get_all_values(self, value, section=None):
         all_values = []
         for values in self.values_list:
-            all_values += values[value]
+            if section == None or section in values[self.ebook_values["section-value"][0]]:
+                all_values += values[value]
         return all_values
 
     # Find specific data based on a series of searches specified by rules in the yaml file.
@@ -252,6 +270,17 @@ class WebBook(epub.EpubBook):
             if len(remove_list) != 0:
                 for remove in remove_list:
                     remove.decompose()
+        return str(soup)
+    
+    # Used to change tags in scraped values.
+    def __change_tags(self, content, tag_list):
+        soup = BeautifulSoup(content, "html.parser")
+        for tags in tag_list:
+            tag_split = tags.split(" ")
+            change_list = self.__find_by_rule(soup, tag_split[0])
+            if len(change_list) != 0:
+                for change in change_list:
+                    change.name = tag_split[1]
         return str(soup)
 
     # Used to search scraped content.

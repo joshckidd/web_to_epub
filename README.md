@@ -56,6 +56,7 @@ values:
 - The following optional sections can be defined for each value
   - find - These are used to scrape the page at the provided url for the values. And the find rule works identically here as it does for link-pages.
   - remove - This works in conjunction with the find section and removes any tags specified from the returned value.
+  - change-tag - This works in conjunction with the find section and expects a list of items where one tag is separated by a space from another. The first tag will be changed to the second tag.
   - static - This specifies a static value.
   - template - This allows you to combine multiple other values in a templated way. It should be enclosed in quotes and merge fields should appear between {{}}. Merge fields can be any other values in the list.
   - aggregate - Since find rules can return multiple values, it can be helpful to aggregate the results. The first word indicates the value to be aggregated. The second indicates the type of aggregation to do. The third is an optional argument. The types of aggregation are:
@@ -85,7 +86,10 @@ values:
       - Blog Posts
 ```
 
-- Currently only "static" and "aggregate" can be used as sections under ebook values. "aggregate" aggregates across all chapters.
+- Currently only "static" and "aggregate" from above can be used as sections under ebook values. "aggregate" aggregates across all chapters.
+  - An additional option "aggregate-section" can be used to aggregate values across sections. This expects two sub-items:
+    - aggregate - Used exactly how aggregate is used above. But it wil be applied only to individual sections.
+    - template - A template used for merging together the different sections. It expects two merge fields: {{section}} and {{aggregate}}
 - The following values can be set as ebook-values:
   - id - Used to set the uid for the ebook.
   - title - Used to set the title for the ebook.
