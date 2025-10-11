@@ -197,6 +197,14 @@ class WebBook(epub.EpubBook):
             )
             self.add_item(img)
             image["src"] = "static/" + name
+            image.attrs.pop("sizes", None)
+            image.attrs.pop("srcset", None)
+            image.attrs.pop("aria-describedby", None)
+        figures = soup.find_all("div", class_="wp-caption")
+        for figure in figures:
+            figure.name = "figure"
+            caption = figure.find("p")
+            caption.name = "figcaption"
         return str(soup)
 
     # Used for aggregate rules.
