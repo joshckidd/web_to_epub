@@ -7,6 +7,7 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from ebooklib import epub
 from lxml import etree
+from src.cover import resize_and_crop_to_png, overlay_png, add_text_to_image
 
 DEFAULT_CHAPTER ="""
 {{content}}
@@ -228,14 +229,15 @@ class WebBook(epub.EpubBook):
     # Used for aggregate rules.
     def __get_aggregate(self, rule, values):
         rule_split = rule.split(" ", 1)
+        values_set = list(set(values))
         if rule_split[0] == "join":
             if rule_split[1][0] == '"' and rule_split[1][-1] == '"':
                 joiner = rule_split[1][1:-1]
             else:
                 joiner = rule_split[1]
-            return [joiner.join(values)]
+            return [joiner.join(values_set)]
         if rule_split[0] == "list":
-            return list(set(values))
+            return values_set
 
     # Used for ebook level aggregations, when a list of all values from each chapter is desired.        
     def __get_all_values(self, value, section=None):
@@ -382,10 +384,62 @@ class WebBook(epub.EpubBook):
     
     # Create the cover. Set it to be linear so that it can appear first in the ebook.
     def __create_cover(self):
-        if "cover" in self.ebook_values:
-            with open("template/" + self.ebook_values["cover"][0], "rb") as f:
+        cover_file = ""
+        if "cover" in self.settings_dict:
+            cover_settings = self.settings_dict["cover"]
+            if "base" in cover_settings:
+                base_cover_settings = cover_settings["base"]
+                if "input" in base_cover_settings and "output" in base_cover_settings and "target_height" in base_cover_settings and "target_width" in base_cover_settings:
+                    cover_file = "output/" + base_cover_settings["output"]
+                    resize_args = {
+                        "input_path": "template/" + base_cover_settings["input"],
+                        "output_path": cover_file,
+                        "target_height": base_cover_settings["target_height"],
+                        "target_width": base_cover_settings["target_width"]
+                    }
+                    if "align-horizontal" in base_cover_settings:
+                        resize_args["align-horizontal"] = base_cover_settings["align-horizontal"]
+                    if "align-vertical" in base_cover_settings:
+                        resize_args["align-vertical"] = base_cover_settings["align-horizontal"]
+                    resize_and_crop_to_png(**resize_args)
+                    if "overlay" in cover_settings:
+                        for overlay_settings in cover_settings["overlay"]:
+                            if "file" in overlay_settings:
+                                overlay_png(cover_file, "template/" + overlay_settings["file"], cover_file)
+                    if "text" in cover_settings:
+                        for text_settings in cover_settings["text"]:
+                            if "text" in text_settings and "font" in text_settings:
+                                if text_settings["text"] in self.ebook_values:
+                                    text = self.ebook_values[text_settings["text"]][0]
+                                else:
+                                    text = text_settings["text"]
+                                text_args = {
+                                    "input_path": cover_file,
+                                    "output_path": cover_file,
+                                    "text": text,
+                                    "font_path": text_settings["font"]
+                                }
+                                if "font_size" in text_settings:
+                                    text_args["font_size"] = text_settings["font_size"]
+                                if "position_x" in text_settings and "position_y" in text_settings:
+                                    text_args["position"] = (text_settings["position_x"], text_settings["position_y"])
+                                if "border_width" in text_settings:
+                                    text_args["border_width"] = text_settings["border_width"]
+                                if "bold" in text_settings:
+                                    text_args["bold"] = text_settings["bold"]
+                                if "max_width" in text_settings:
+                                    text_args["max_width"] = text_settings["max_width"]
+                                if "align" in text_settings:
+                                    text_args["align"] = text_settings["align"]
+                                if "treat_as_names" in text_settings:
+                                    text_args["treat_as_names"] = text_settings["treat_as_names"]
+                                add_text_to_image(**text_args)
+        if "cover" in self.ebook_values and cover_file == "":
+            cover_file = "template/" + self.ebook_values["cover"][0]
+        if cover_file != "":
+            with open(cover_file, "rb") as f:
                 image_content = f.read()
-            self.set_cover(content=image_content, file_name="static/" + self.ebook_values["cover"][0])
+            self.set_cover(content=image_content, file_name=cover_file)
             self.get_item_with_id("cover").is_linear = True
             self.spine.append("cover")
 
