@@ -83,7 +83,7 @@ class WebBook(epub.EpubBook):
                                 values = self.__get_all_values(aggregate_split[0], section=section)
                                 if values != None:
                                     section_values["aggregate"] = self.__get_aggregate(aggregate_split[1], values)
-                                    if section_values["aggregate"][0] != "" and "template" in values_settings[value]["aggregate-section"]:
+                                    if len(section_values["aggregate"]) > 0 and section_values["aggregate"][0] != "" and "template" in values_settings[value]["aggregate-section"]:
                                         aggregate_content = self.__merge_content(values_settings[value]["aggregate-section"]["template"], section_values)
                                         aggregate_section_value += aggregate_content
                     new_values += [aggregate_section_value]
@@ -230,6 +230,8 @@ class WebBook(epub.EpubBook):
     def __get_aggregate(self, rule, values):
         rule_split = rule.split(" ", 1)
         values_set = list(set(values))
+        if len(values_set) == 0:
+            return []
         if rule_split[0] == "join":
             if rule_split[1][0] == '"' and rule_split[1][-1] == '"':
                 joiner = rule_split[1][1:-1]
@@ -433,6 +435,10 @@ class WebBook(epub.EpubBook):
                                     text_args["align"] = text_settings["align"]
                                 if "treat_as_names" in text_settings:
                                     text_args["treat_as_names"] = text_settings["treat_as_names"]
+                                if "color" in text_settings:
+                                    if text_settings["color"] == "black":
+                                        text_args["color"] = (0,0,0)
+                                        text_args["border_color"] = (255,255,255)
                                 add_text_to_image(**text_args)
         if "cover" in self.ebook_values and cover_file == "":
             cover_file = "template/" + self.ebook_values["cover"][0]
