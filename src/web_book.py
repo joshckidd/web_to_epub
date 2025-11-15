@@ -160,7 +160,7 @@ class WebBook(epub.EpubBook):
     def __create_chapters(self, section=None):
         chapter_list = []
         for values in self.values_list:
-            if section == None or section in values[self.ebook_values["section-value"][0]]:
+            if section == None or (values != None and section in values[self.ebook_values["section-value"][0]]):
                 title = ""
                 if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
                     title = values[self.ebook_values["chapter-title"][0]][0]
@@ -195,7 +195,7 @@ class WebBook(epub.EpubBook):
                         new_values += self.__get_aggregate(setting_split[1], values[setting_split[0]])
                 if "template" in values_settings[value]:
                     new_values.append(self.__merge_content(values_settings[value]["template"], values))
-                values[value] = new_values                
+                values[value] = new_values        
             return values
 
     # Scrape and create images that are needed for specific content.
@@ -245,7 +245,7 @@ class WebBook(epub.EpubBook):
     def __get_all_values(self, value, section=None):
         all_values = []
         for values in self.values_list:
-            if section == None or section in values[self.ebook_values["section-value"][0]]:
+            if values != None and (section == None or section in values[self.ebook_values["section-value"][0]]):
                 all_values += values[value]
         return all_values
 
@@ -411,7 +411,7 @@ class WebBook(epub.EpubBook):
                     if "text" in cover_settings:
                         for text_settings in cover_settings["text"]:
                             if "text" in text_settings and "font" in text_settings:
-                                if text_settings["text"] in self.ebook_values:
+                                if text_settings["text"] in self.ebook_values and len(self.ebook_values[text_settings["text"]]) != 0:
                                     text = self.ebook_values[text_settings["text"]][0]
                                 else:
                                     text = text_settings["text"]

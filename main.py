@@ -6,8 +6,10 @@ def main():
     template_files = os.listdir(TEMPLATE_DIR)
     for file in template_files:
         if file[-4:] == ".yml":
+            print("Creating ebook for " + file)
             book = WebBook(get_settings(file))
             book.write_book()
+            print("Ebook created.")
 
 if __name__ == "__main__":
     main()
