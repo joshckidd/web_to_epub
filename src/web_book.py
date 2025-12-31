@@ -399,10 +399,10 @@ class WebBook(epub.EpubBook):
                         "target_height": base_cover_settings["target_height"],
                         "target_width": base_cover_settings["target_width"]
                     }
-                    if "align-horizontal" in base_cover_settings:
-                        resize_args["align-horizontal"] = base_cover_settings["align-horizontal"]
-                    if "align-vertical" in base_cover_settings:
-                        resize_args["align-vertical"] = base_cover_settings["align-horizontal"]
+                    if "align_horizontal" in base_cover_settings:
+                        resize_args["align_horizontal"] = base_cover_settings["align_horizontal"]
+                    if "align_vertical" in base_cover_settings:
+                        resize_args["align_vertical"] = base_cover_settings["align_horizontal"]
                     resize_and_crop_to_png(**resize_args)
                     if "overlay" in cover_settings:
                         for overlay_settings in cover_settings["overlay"]:
