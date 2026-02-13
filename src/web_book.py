@@ -208,13 +208,15 @@ class WebBook(epub.EpubBook):
             image_content = requests.get(absolute_link).content
             mime_type, encoding = mimetypes.guess_type(name)
             id_name = name.replace("%","")
-            img = epub.EpubImage(
-                uid="image_" + name,
-                file_name="static/" + id_name,
-                media_type=mime_type,
-                content=image_content,
-            )
-            self.add_item(img)
+            exists = self.get_item_with_id("image_" + name)
+            if exists == None:
+                img = epub.EpubImage(
+                    uid="image_" + name,
+                    file_name="static/" + id_name,
+                    media_type=mime_type,
+                    content=image_content,
+                )
+                self.add_item(img)
             image["src"] = "static/" + id_name
             image.attrs.pop("sizes", None)
             image.attrs.pop("srcset", None)
