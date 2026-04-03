@@ -15,7 +15,7 @@ This code was developed to solve a real world problem that I was having, attempt
 - Provide an easy templating system, so that changes to the format and layout could be made by modifying template files and not the underlying code.
 - Allow me to output ebooks that met accessibility standards.
 
-## Quick start
+## Quick Start
 
 Running main.py will look in the templates/ folder for any template files. I've included a test template that scrapes code from a site that I created for a coding class and outputs an ebook.
 
