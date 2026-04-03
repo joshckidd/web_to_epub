@@ -1,12 +1,42 @@
 # web_to_epub
 
+## Description
+
+A tool for scraping web content and generating an ebook from that content. I use this tool regularly to scrape the page of an online science fiction magazine to provide ebooks to supporters of the magazine.
+
 **Note: This tool may only be used to create ebooks from content where you are the copyright holder (e.g. the posts on your personal blog) or you have received explicit permission from the copyright holder to do so.**
 
-## Project Description
+## Motivation
 
-A tool for scraping web content and generating an ebook from that content. Running main.py will look in the templates/ folder for any .yml files. For every well formed template file that it finds, it will generate an ebook in output/.
+This code was developed to solve a real world problem that I was having, attempting to create ebooks from existing web content. I needed a tool that would:
 
-## Formatting Template Files
+- Preserve the formatting of the content from the website.
+- Allow for the content from multiple different html pages to be combined in a single ebook, with a format and layout that I specified.
+- Provide an easy templating system, so that changes to the format and layout could be made by modifying template files and not the underlying code.
+- Allow me to output ebooks that met accessibility standards.
+
+## Quick start
+
+Running main.py will look in the templates/ folder for any template files. I've included a test template that scrapes code from a site that I created for a coding class and outputs an ebook.
+
+### Prerequisites
+
+- Make sure you have python installed. (3.13+) ([Download page](https://www.python.org/downloads/))
+- Make sure you have uv installed. ([Installation instructions](https://docs.astral.sh/uv/getting-started/installation/))
+
+### Creating the Test Ebook
+
+From the root of the respository run: `uv run main.py`
+
+That's it! In less than a minute you should have an ebook in the output/ directory.
+
+## Usage
+
+To create your own ebooks, you need to create your own templates for the templates/ folder. The code will attempt to create one ebook for each yaml file in the folder.
+
+Here are some tips for creating your own templates:
+
+### Formatting Template Files
 
 Template files include:
 
@@ -140,6 +170,18 @@ The provided files in the template\ directory will create an ebook. Most of the 
 
 ## Planned Updates
 
-- Adding support for accessibility tags.
 - Adding support for additional ebook metadata.
 - Adding support for pages after the sections.
+
+## Contributing
+
+### Clone the repo
+
+```bash
+git clone https://github.com/joshckidd/web_to_epub.git
+cd web_to_epub
+```
+
+### Submit a pull request
+
+If you'd like to contribute, please fork the repository and open a pull request to the `main` branch.
