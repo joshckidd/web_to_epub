@@ -126,11 +126,11 @@ class WebBook(epub.EpubBook):
                 self.add_author(author)
         if "publisher" in self.ebook_values:
             self.set_unique_metadata(namespace="DC", name="publisher", value=self.ebook_values["publisher"][0])
-        self.add_metadata(None, "meta", None, {"name": "schema:accessMode", "content": "textual"})
-        self.add_metadata(None, "meta", None, {"name": "schema:accessModeSufficient", "content": "textual, visual"})
-        self.add_metadata(None, "meta", None, {"name": "schema:accessibilityFeature", "content": "none"})
-        self.add_metadata(None, "meta", None, {"name": "schema:accessibilityHazard", "content": "none"})
-        self.add_metadata(None, "meta", None, {"name": "schema:accessibilitySummary", "content": "This publication conforms to WCAG 2.0 Level AA."})
+        self.add_metadata(None, "meta", "textual", {"property": "schema:accessMode"})
+        self.add_metadata(None, "meta", "textual, visual", {"property": "schema:accessModeSufficient"})
+        self.add_metadata(None, "meta", "none", {"property": "schema:accessibilityFeature"})
+        self.add_metadata(None, "meta", "none", {"property": "schema:accessibilityHazard"})
+        self.add_metadata(None, "meta", "This publication conforms to WCAG 2.0 Level AA.", {"property": "schema:accessibilitySummary"})
 
     # Set templates to be used for the ebook based on rules specified in the yaml file.
     def __set_templates(self):
