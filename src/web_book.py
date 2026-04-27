@@ -28,6 +28,7 @@ class WebBook(epub.EpubBook):
     # All content is created when a new instance of WebBook is created.
     def __init__(self, settings_dict):
         super().__init__()
+        self.chapter_ids = []
         self.spine = []
         self.settings_dict = settings_dict
         self.__set_links()
@@ -165,11 +166,13 @@ class WebBook(epub.EpubBook):
                 if "chapter-title" in self.ebook_values and self.ebook_values["chapter-title"][0] in values:
                     title = values[self.ebook_values["chapter-title"][0]][0]
                 id_name = slugify(title)
-                c1 = epub.EpubHtml(title=title, file_name=id_name + ".xhtml", lang=self.default_language, )
-                c1.content = self.__merge_content(self.chapter_template, values)
-                c1.add_item(self.default_css)
-                self.add_item(c1)
-                chapter_list.append(c1)
+                if id_name not in self.chapter_ids:
+                    self.chapter_ids.append(id_name)
+                    c1 = epub.EpubHtml(title=title, file_name=id_name + ".xhtml", lang=self.default_language, )
+                    c1.content = self.__remove_empty_tags(self.__merge_content(self.chapter_template, values))
+                    c1.add_item(self.default_css)
+                    self.add_item(c1)
+                    chapter_list.append(c1)
         return chapter_list
 
     # Create a values dictionary based on a specified url and rules specified in the yaml file.
@@ -378,7 +381,7 @@ class WebBook(epub.EpubBook):
         toc_list = []
         for page in pages:
             if "name" in page and "template" in page and page["template"] in self.page_templates:
-                id_name = page["name"].lower().replace(" ", "-")
+                id_name = page["name"].lower().replace(" ", "-").replace("?","")
                 p1 = epub.EpubHtml(uid=id_name, file_name=id_name + ".xhtml", content=self.__merge_content(self.page_templates[page["template"]], self.ebook_values), title=page["name"])
                 p1.add_item(self.default_css)
                 self.add_item(p1)
@@ -459,6 +462,12 @@ class WebBook(epub.EpubBook):
             others["{" + epub.NAMESPACES["OPF"] + "}scheme"] = "URI"
 
         self.set_unique_metadata('DC', 'identifier', self.uid, others)
+
+    def __remove_empty_tags(self, body):
+        res = body.replace("<h2></h2>", "").replace("<h3></h3>", "")
+        if "<h3>" in res and "<h2>" not in res:
+            res = res.replace("<h3>", "<h2>").replace("</h3>", "</h2>")
+        return res
 
 # Extending EpubWriter because there's metadata that it isn't currently writing
 class WebBookWriter(epub.EpubWriter):
